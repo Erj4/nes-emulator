@@ -1,0 +1,12 @@
+condense_wildcard_suffixes = true
+group_imports = "StdExternalCrate"
+hex_literal_case = "Upper"
+imports_granularity = "Crate"
+reorder_impl_items = true
+reorder_imports = true
+reorder_modules = true
+spaces_around_ranges = true
+struct_field_align_threshold = 20
+tab_spaces = 2
+use_field_init_shorthand = true
+use_try_shorthand = true
