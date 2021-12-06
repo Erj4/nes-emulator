@@ -1,8 +1,10 @@
+cargo-features = ["edition2021"]
+
 [package]
 name = "emulators"
 version = "0.1.0"
 authors = ["Edward Jones <mail@erj4.uk>"]
-edition = "2018"
+edition = "2021"
 
 [lib]
 name = "emulators"
@@ -15,7 +17,10 @@ path = "src/main.rs"
 [dependencies]
 chrono = "0.4.19"
 env_logger = "0.9.0"
+evalexpr = "6.6.0"
 log = "0.4.14"
+structopt = "0.3.25"
+thiserror = "1.0.30"
 
 [dev-dependencies.cargo-husky]
 version = "1"

@@ -1,12 +1,11 @@
 use std::{
   fmt,
-  mem::MaybeUninit,
   ops::{Index, IndexMut},
 };
 
-pub mod constant;
-
 use crate::cpu;
+
+pub mod constant;
 
 #[derive(Debug)]
 pub enum Location {
@@ -33,9 +32,12 @@ impl fmt::Debug for NES {
 impl NES {
   #[must_use]
   /// # Panics
+  /// This function will panic if it receives an address that is outside of the known memory region ranges
   pub fn resolve_address(address: Address) -> Location {
-    use constant::{PROGRAM_ROM_START, RAM_END, RAM_START};
-    use Location::*;
+    use crate::memory::{
+      constant::{PROGRAM_ROM_START, RAM_END, RAM_START},
+      Location::*,
+    };
 
     match address {
       RAM_START .. RAM_END => Ram(address - RAM_START),
@@ -70,8 +72,8 @@ impl Default for NES {
   fn default() -> Self {
     #[allow(clippy::uninit_assumed_init)] // No guarantees that emulator memory is initialised
     Self {
-      program_rom: unsafe { MaybeUninit::uninit().assume_init() },
-      ram:         unsafe { MaybeUninit::uninit().assume_init() },
+      program_rom: [0; constant::PROGRAM_ROM_SIZE as usize],
+      ram:         [0; constant::RAM_SIZE as usize],
     }
   }
 }
@@ -80,7 +82,7 @@ impl Index<Address> for NES {
   type Output = cpu::Int;
 
   fn index(&self, address: Address) -> &Self::Output {
-    use Location::*;
+    use crate::memory::Location::*;
 
     let location = Self::resolve_address(address);
     match location {
@@ -92,7 +94,7 @@ impl Index<Address> for NES {
 
 impl IndexMut<Address> for NES {
   fn index_mut(&mut self, address: Address) -> &mut Self::Output {
-    use Location::*;
+    use crate::memory::Location::*;
 
     let location = Self::resolve_address(address);
     match location {

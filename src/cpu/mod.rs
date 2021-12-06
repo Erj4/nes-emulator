@@ -1,5 +1,7 @@
 #![allow(clippy::identity_op)] // Ignored due to clippy bug
 
+use std::{fs::File, io::Read};
+
 use log::info;
 
 pub mod addressing_mode;
@@ -19,6 +21,19 @@ pub struct NES {
 }
 
 impl NES {
+  /// Reads a set of bytes into the ROM
+  ///
+  /// # Errors
+  /// Forwards any errors encountered while reading the file
+  pub fn load_file(&mut self, mut file: File) -> std::io::Result<usize> {
+    let result = file.read(&mut self.memory.program_rom)?;
+    self
+      .memory
+      .write_u16(memory::constant::PROGRAM_COUNTER_RESET, 0x8000);
+
+    Ok(result)
+  }
+
   pub fn load(&mut self, program: &[Int]) {
     self.memory.program_rom[.. program.len()].copy_from_slice(program);
     self
@@ -51,7 +66,7 @@ impl NES {
       if self.stop {
         break;
       }
-      info!("Execution has stopped")
+      info!("execution has stopped")
     }
   }
 

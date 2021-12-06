@@ -1,6 +1,6 @@
-use addressing_mode::Resolvable;
 use log::debug;
 
+use self::addressing_mode::Resolvable;
 use crate::cpu::{addressing_mode, memory, Cpu, Int};
 
 #[derive(Debug)]
@@ -126,8 +126,7 @@ pub enum Operation {
 impl Operation {
   #[allow(clippy::too_many_lines)]
   fn new(opcode: Int, cpu: &mut Cpu) -> Operation {
-    use addressing_mode::Resolvable as Addr;
-    use Operation::*;
+    use self::{addressing_mode::Resolvable as Addr, Operation::*};
     match opcode {
       // ADC
       0x69 => ADC(Addr::immediate(cpu)),
@@ -306,7 +305,7 @@ impl Operation {
       0x84 => STY(Addr::zero_page(cpu)),
       0x94 => STY(Addr::x_indexed_zero_page(cpu)),
       0x8C => STY(Addr::absolute(cpu)),
-      _ => unimplemented!("Opcode {:X?}", opcode),
+      _ => unimplemented!("opcode {:X?}", opcode),
     }
   }
 }
@@ -320,14 +319,14 @@ impl Cpu {
 
   /// # Panics
   pub fn execute(self: &mut Cpu, operation: &Operation) {
-    use Operation::*;
+    use self::Operation::*;
     debug!(
       "executing operation {:?} at {:#x}",
       operation, self.register.program_counter
     );
     match operation {
       BRK => self.stop = true,
-      _ => unimplemented!("operation {:?}", operation),
+      _ => unimplemented!("operation {:#?}", operation),
     }
   }
 }
