@@ -31,8 +31,8 @@ fn main() -> Result<(), Box<dyn Error>> {
   let mut cpu: cpu::Cpu = cpu::Cpu::default();
 
   if let Some(path) = args.file {
-    let file = File::open(path)?;
-    cpu.load_file(file)?;
+    let mut file = File::open(path)?;
+    cpu.load_from(&mut file)?;
   };
   match args.start_address {
     None => cpu.start(),

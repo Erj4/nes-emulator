@@ -1,6 +1,6 @@
 #![allow(clippy::identity_op)] // Ignored due to clippy bug
 
-use std::{fs::File, io::Read};
+use std::io::Read;
 
 use log::info;
 
@@ -25,8 +25,8 @@ impl NES {
   ///
   /// # Errors
   /// Forwards any errors encountered while reading the file
-  pub fn load_file(&mut self, mut file: File) -> std::io::Result<usize> {
-    let result = file.read(&mut self.memory.program_rom)?;
+  pub fn load_from(&mut self, from: &mut dyn Read) -> std::io::Result<usize> {
+    let result = from.read(&mut self.memory.program_rom)?;
     self
       .memory
       .write_u16(memory::constant::PROGRAM_COUNTER_RESET, 0x8000);
@@ -80,5 +80,39 @@ impl NES {
     let result = self.memory.read_u16(self.register.program_counter);
     self.register.program_counter += 2;
     result
+  }
+}
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+
+  #[test]
+  fn load_from() {
+    let mut cpu = Cpu::default();
+
+    let size = crate::memory::constant::PROGRAM_ROM_SIZE as usize;
+    let values = vec![1; size];
+
+    assert_eq!(size, cpu.load_from(&mut values.as_slice()).unwrap());
+  }
+  #[test]
+  fn load_from_small() {
+    let mut cpu = Cpu::default();
+
+    let size = crate::memory::constant::PROGRAM_ROM_SIZE as usize - 1;
+    let values = vec![1; size];
+
+    assert_eq!(size, cpu.load_from(&mut values.as_slice()).unwrap());
+  }
+
+  #[test]
+  fn load_from_too_large() {
+    let mut cpu = Cpu::default();
+
+    let rom_size = crate::memory::constant::PROGRAM_ROM_SIZE as usize;
+    let values = vec![1; rom_size + 1];
+
+    assert_eq!(rom_size, cpu.load_from(&mut values.as_slice()).unwrap());
   }
 }
