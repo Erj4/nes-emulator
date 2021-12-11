@@ -15,12 +15,12 @@ pub enum Location {
 
 pub type Address = u16;
 
-pub struct NES {
+pub struct Nes {
   pub program_rom: [cpu::Int; constant::PROGRAM_ROM_SIZE as usize],
-  pub ram:         [cpu::Int; constant::RAM_SIZE as usize],
+  pub ram: [cpu::Int; constant::RAM_SIZE as usize],
 }
 
-impl fmt::Debug for NES {
+impl fmt::Debug for Nes {
   fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
     f.debug_struct("Cpu6502")
       .field("program_rom", &format_args!("{:X?}", &self.program_rom))
@@ -29,7 +29,7 @@ impl fmt::Debug for NES {
   }
 }
 
-impl NES {
+impl Nes {
   #[must_use]
   /// # Panics
   /// This function will panic if it receives an address that is outside of the known memory region ranges
@@ -40,8 +40,8 @@ impl NES {
     };
 
     match address {
-      RAM_START .. RAM_END => Ram(address - RAM_START),
-      constant::PROGRAM_ROM_START .. => ProgramRom(address - PROGRAM_ROM_START),
+      RAM_START.. if address < RAM_END => Ram(address - RAM_START),
+      constant::PROGRAM_ROM_START.. => ProgramRom(address - PROGRAM_ROM_START),
       _ => todo!("Memory location {:#4X}", address),
     }
   }
@@ -67,18 +67,18 @@ impl NES {
   }
 }
 
-impl Default for NES {
+impl Default for Nes {
   #[inline]
   fn default() -> Self {
     #[allow(clippy::uninit_assumed_init)] // No guarantees that emulator memory is initialised
-    Self {
+    Nes {
       program_rom: [0; constant::PROGRAM_ROM_SIZE as usize],
-      ram:         [0; constant::RAM_SIZE as usize],
+      ram: [0; constant::RAM_SIZE as usize],
     }
   }
 }
 
-impl Index<Address> for NES {
+impl Index<Address> for Nes {
   type Output = cpu::Int;
 
   fn index(&self, address: Address) -> &Self::Output {
@@ -86,20 +86,20 @@ impl Index<Address> for NES {
 
     let location = Self::resolve_address(address);
     match location {
-      Ram(address) => &self.ram[address as usize],
-      ProgramRom(address) => &self.program_rom[address as usize],
+      Ram(ram_address) => &self.ram[ram_address as usize],
+      ProgramRom(rom_address) => &self.program_rom[rom_address as usize],
     }
   }
 }
 
-impl IndexMut<Address> for NES {
+impl IndexMut<Address> for Nes {
   fn index_mut(&mut self, address: Address) -> &mut Self::Output {
     use crate::memory::Location::*;
 
     let location = Self::resolve_address(address);
     match location {
-      Ram(address) => &mut self.ram[address as usize],
-      ProgramRom(address) => &mut self.program_rom[address as usize],
+      Ram(ram_address) => &mut self.ram[ram_address as usize],
+      ProgramRom(rom_address) => &mut self.program_rom[rom_address as usize],
     }
   }
 }

@@ -1,13 +1,13 @@
 use crate::{cpu, memory};
 
 #[derive(Debug, Default)]
-pub struct NES {
+pub struct Nes {
   pub program_counter: memory::Address,
-  pub stack_pointer:   cpu::Int,
-  pub accumulator:     cpu::Int,
-  pub index_x:         cpu::Int,
-  pub index_y:         cpu::Int,
-  pub status:          StatusRegister,
+  pub stack_pointer: cpu::Int,
+  pub accumulator: cpu::Int,
+  pub index_x: cpu::Int,
+  pub index_y: cpu::Int,
+  pub status: StatusRegister,
 }
 
 #[derive(Debug, Default)]
@@ -17,12 +17,12 @@ pub struct NES {
 ///
 #[must_use]
 pub struct StatusRegister {
-  pub result_status:    ResultStatus,
+  pub result_status: ResultStatus,
   pub interrupt_status: InterruptStatus,
   /// Whether arithmetic should treat values as binary-coded decimal rather than binary values
   ///
   /// Decimal mode is not supported on NES chips.
-  decimal_mode:         NumberMode,
+  pub decimal_mode: NumberMode,
 }
 
 #[derive(Debug, Default)]
@@ -30,7 +30,7 @@ pub struct InterruptStatus {
   /// Whether *maskable* interrupts should be disabled
   ///
   /// It can be explicitly set using the 'Set Interrupt Disable' (SEI) instruction and cleared with 'Clear Interrupt Disable' (CLI).
-  pub enabled:       bool,
+  pub enabled: bool,
   /// Whether a BRK instruction has been executed and an interrupt has been generated to process it
   pub break_command: bool,
 }
@@ -38,7 +38,7 @@ pub struct InterruptStatus {
 #[derive(Debug, Default)]
 pub struct ResultStatus {
   /// Whether result of last operation was zero
-  pub zero:     bool,
+  pub zero: bool,
   /// Whether result of last operation was "negative"
   ///
   /// This flag is true if the most-significant bit of the result was one.
@@ -47,7 +47,7 @@ pub struct ResultStatus {
   ///
   /// This condition is set during arithmetic, comparison and during logical shifts.
   /// It can be explicitly set using the 'Set Carry Flag' (SEC) instruction and cleared with 'Clear Carry Flag' (CLC).
-  pub carry:    Carry,
+  pub carry: Carry,
   /// Whether last operation caused a *signed* integer overflow
   ///
   ///

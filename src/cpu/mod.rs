@@ -1,26 +1,26 @@
 #![allow(clippy::identity_op)] // Ignored due to clippy bug
 
-use std::io::Read;
-
-use log::info;
-
 pub mod addressing_mode;
 pub mod operation;
 pub mod registers;
 
+use std::io::Read;
+
+use log::info;
+
 use crate::memory;
 
-pub type Cpu = NES;
+pub type Cpu = Nes;
 pub type Int = u8;
 
 #[derive(Debug, Default)]
-pub struct NES {
-  pub register: registers::NES,
-  pub memory:   memory::NES,
-  stop:         bool,
+pub struct Nes {
+  pub register: registers::Nes,
+  pub memory: memory::Nes,
+  stop: bool,
 }
 
-impl NES {
+impl Nes {
   /// Reads a set of bytes into the ROM
   ///
   /// # Errors
@@ -35,14 +35,14 @@ impl NES {
   }
 
   pub fn load(&mut self, program: &[Int]) {
-    self.memory.program_rom[.. program.len()].copy_from_slice(program);
+    self.memory.program_rom[..program.len()].copy_from_slice(program);
     self
       .memory
       .write_u16(memory::constant::PROGRAM_COUNTER_RESET, 0x8000);
   }
 
   pub fn reset(&mut self) {
-    self.register = registers::NES::default();
+    self.register = registers::Nes::default();
     self.register.program_counter = self
       .memory
       .read_u16(memory::constant::PROGRAM_COUNTER_RESET);
@@ -50,13 +50,13 @@ impl NES {
 
   pub fn start(&mut self) {
     self.reset();
-    self.resume()
+    self.resume();
   }
 
   pub fn start_from(&mut self, instructions: memory::Address) {
     self.reset();
     self.register.program_counter = instructions;
-    self.resume()
+    self.resume();
   }
 
   pub fn resume(&mut self) {
@@ -66,7 +66,7 @@ impl NES {
       if self.stop {
         break;
       }
-      info!("execution has stopped")
+      info!("execution has stopped");
     }
   }
 
