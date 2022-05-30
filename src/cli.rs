@@ -13,7 +13,7 @@ use crate::memory;
 )]
 pub struct Cli {
   #[structopt(long, env = "NES_LOG_LEVEL")]
-  pub log:           Option<log::LevelFilter>,
+  pub log: Option<log::LevelFilter>,
   /// Initial address to set program counter to
   ///
   /// This may be any evalexpr expression which evaluates to a valid memory address integer.
@@ -23,7 +23,7 @@ pub struct Cli {
   pub start_address: Option<memory::Address>,
   /// Program file to load to ROM
   #[structopt(name = "FILE", parse(from_os_str))]
-  pub file:          Option<PathBuf>,
+  pub file: Option<PathBuf>,
 }
 
 #[derive(Error, Debug)]
@@ -35,7 +35,7 @@ enum AddressExprError {
   )]
   AddressOutOfRange {
     address: evalexpr::IntType,
-    source:  std::num::TryFromIntError,
+    source: std::num::TryFromIntError,
   },
   #[error(transparent)]
   AddressExpressionError(#[from] evalexpr::EvalexprError),

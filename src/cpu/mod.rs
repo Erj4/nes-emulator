@@ -1,6 +1,7 @@
 #![allow(clippy::identity_op)] // Ignored due to clippy bug
 
 pub mod addressing_mode;
+pub mod exec;
 pub mod operation;
 pub mod registers;
 
@@ -9,6 +10,7 @@ use std::io::Read;
 use log::info;
 
 use crate::memory;
+use operation::Operation;
 
 pub type Cpu = Nes;
 pub type Int = u8;
@@ -66,8 +68,8 @@ impl Nes {
       if self.stop {
         break;
       }
-      info!("execution has stopped");
     }
+    info!("execution has stopped");
   }
 
   fn next_int(&mut self) -> Int {
@@ -96,6 +98,7 @@ mod tests {
 
     assert_eq!(size, cpu.load_from(&mut values.as_slice()).unwrap());
   }
+
   #[test]
   fn load_from_small() {
     let mut cpu = Cpu::default();

@@ -1,60 +1,57 @@
 pub mod parse;
 
-use log::debug;
-
-use self::addressing_mode::Resolvable;
-use super::{addressing_mode, memory, Cpu, Int};
+use super::addressing_mode::{Location, Value};
 
 #[derive(Debug)]
 pub enum Operation {
   /// Add with carry
-  Adc(Resolvable<Int>),
+  Adc(Box<dyn Value>),
   /// Bitwise AND with accumulator
-  And(Resolvable<Int>),
+  And(Box<dyn Value>),
   /// Arithmetic shift accumulator left
   ASLAcc,
   /// Arithmetic shift left
-  Asl(Resolvable<memory::Address>),
+  Asl(Box<dyn Location>),
   /// Set flags based on bits
-  Bit(Resolvable<Int>),
+  Bit(Box<dyn Value>),
   /// Branch if plus
   ///
   /// Branch if negative flag clear
-  Bpl(Resolvable<Int>),
+  Bpl(Box<dyn Value>),
   /// Branch if minus
   ///
   /// Branch if negative flag set
-  Bmi(Resolvable<Int>),
+  Bmi(Box<dyn Value>),
   /// Branch if overflow flag clear
-  Bvc(Resolvable<Int>),
+  Bvc(Box<dyn Value>),
   /// Branch if overflow flag set
-  Bvs(Resolvable<Int>),
+  Bvs(Box<dyn Value>),
   /// Branch if carry flag clear
-  Bcc(Resolvable<Int>),
+  Bcc(Box<dyn Value>),
   /// Branch if carry flag set
-  Bcs(Resolvable<Int>),
+  Bcs(Box<dyn Value>),
   /// Branch if not equal
   ///
   /// Branches if zero flag clear
-  Bne(Resolvable<Int>),
+  Bne(Box<dyn Value>),
   /// Branch if equal
   ///
   /// Branch if zero flag set
-  Beq(Resolvable<Int>),
+  Beq(Box<dyn Value>),
   /// Break
   ///
   /// Triggers non-maskable interrupt (NMI).
   Brk,
   /// Compare to accumulator
-  Cmp(Resolvable<Int>),
+  Cmp(Box<dyn Value>),
   /// Compare to X register
-  Cpx(Resolvable<Int>),
+  Cpx(Box<dyn Value>),
   /// Compare to Y register
-  Cpy(Resolvable<Int>),
+  Cpy(Box<dyn Value>),
   /// Decrement memory
-  Dec(Resolvable<memory::Address>),
+  Dec(Box<dyn Location>),
   /// Bitwise exclusive OR (XOR)
-  Eor(Resolvable<Int>),
+  Eor(Box<dyn Value>),
   /// Set carry processor flag
   Sec,
   /// Clear carry processor flag
@@ -70,23 +67,23 @@ pub enum Operation {
   /// Clear decimal mode processor flag (not implemented on NES)
   Cld,
   /// Increment memory
-  Inc(Resolvable<memory::Address>),
+  Inc(Box<dyn Location>),
   /// Jump
-  Jmp(Resolvable<memory::Address>),
+  Jmp(Box<dyn Location>),
   /// Jump to SubRoutine
-  Jsr(Resolvable<memory::Address>),
+  Jsr(Box<dyn Location>),
   /// Load to accumulator
-  Lda(Resolvable<Int>),
+  Lda(Box<dyn Value>),
   /// Load to X register
-  Ldx(Resolvable<Int>),
+  Ldx(Box<dyn Value>),
   /// Load to Y register
-  Ldy(Resolvable<Int>),
+  Ldy(Box<dyn Value>),
   /// Logical shift right
-  Lsr(Resolvable<Int>),
+  Lsr(Box<dyn Value>),
   /// No-op
   Nop,
   /// Bitwise OR with accumulator
-  Ora(Resolvable<Int>),
+  Ora(Box<dyn Value>),
   /// Transfer A to X
   Tax,
   /// Transfer X to A
@@ -106,42 +103,21 @@ pub enum Operation {
   /// Rotate accumulator left
   RolAcc,
   /// Rotate left
-  Rol(Resolvable<memory::Address>),
+  Rol(Box<dyn Location>),
   /// Rotate accumulator left
   RorAcc,
   /// Rotate accumulator right
-  Ror(Resolvable<memory::Address>),
+  Ror(Box<dyn Location>),
   /// Return from interrupt
   Rti,
   /// Return from subroutine
   Rts,
   /// Subtract with carry
-  Sbc(Resolvable<Int>),
+  Sbc(Box<dyn Value>),
   // Store accumulator
-  Sta(Resolvable<memory::Address>),
+  Sta(Box<dyn Location>),
   // Store accumulator
-  Stx(Resolvable<memory::Address>),
+  Stx(Box<dyn Location>),
   // Store accumulator
-  Sty(Resolvable<memory::Address>),
-}
-
-impl Cpu {
-  pub fn next_operation(self: &mut Cpu) -> Operation {
-    let _opcode: Int = self.next_int();
-    Operation::new(self)
-  }
-
-  /// # Panics
-  /// This function panics if it attempts to execute an operation without a
-  pub fn execute(self: &mut Cpu, operation: &Operation) {
-    use Operation::*;
-    debug!(
-      "executing operation {:?} at {:#x}",
-      operation, self.register.program_counter
-    );
-    match operation {
-      Brk => self.stop = true,
-      _ => unimplemented!("operation {:#?}", operation),
-    }
-  }
+  Sty(Box<dyn Location>),
 }

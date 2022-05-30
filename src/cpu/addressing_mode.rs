@@ -1,204 +1,146 @@
 use crate::{cpu, memory};
 
+pub trait Value: ValueInner + std::fmt::Debug {}
+impl<T: ValueInner + std::fmt::Debug> Value for T {}
+pub trait Location: LocationInner + std::fmt::Debug {}
+impl<T: LocationInner + std::fmt::Debug> Location for T {}
+pub trait Indirection: IndirectionInner + std::fmt::Debug {}
+impl<T: IndirectionInner + std::fmt::Debug> Indirection for T {}
+
+pub trait ValueInner {
+  fn get(&self, cpu: &cpu::Cpu) -> cpu::Int;
+}
+
+pub trait LocationInner {
+  fn address(&self, cpu: &cpu::Cpu) -> memory::Address;
+}
+impl dyn LocationInner {
+  pub fn set(&self, cpu: &mut cpu::Cpu, value: cpu::Int) {
+    let address = self.address(cpu);
+    cpu.memory[address] = value;
+  }
+}
+impl<T: LocationInner> ValueInner for T {
+  fn get(&self, cpu: &cpu::Cpu) -> cpu::Int {
+    cpu.memory[self.address(cpu)]
+  }
+}
+
+pub trait IndirectionInner {
+  type To: LocationInner;
+  fn unwrap(&self, cpu: &cpu::Cpu) -> Self::To;
+}
+impl<T: IndirectionInner> LocationInner for T {
+  fn address(&self, cpu: &cpu::Cpu) -> memory::Address {
+    self.unwrap(cpu).address(cpu)
+  }
+}
+
+/// Literal values
 #[derive(Debug)]
-/// Standard addressing modes, which are used to retrieve value(s) from memory
-pub enum ResolvableAddress {
-  /// Single-byte addressing (allows addresses 0x0000 to 0x00FF)
-  ///
-  /// Resolves to [`Resolvable::Resolved`] value
-  ZeroPage(cpu::Int),
-  /// Value in register X added to address - wraps at end of ZeroPage (u8) range
-  ///
-  /// Resolves to [`ResolvableAddress::ZeroPage`]
-  XIndexedZeroPage(cpu::Int),
-  /// Same as [`ResolvableAddress::IndexedZeroPageX`], but using register Y - only used for LDX & STX
-  ///
-  /// Resolves to [`ResolvableAddress::ZeroPage`]
-  YIndexedZeroPage(cpu::Int),
-  /// Dual-byte addressing
-  ///
-  /// Resolves to [`Resolvable::Resolved`] value
-  Absolute(memory::Address),
-  /// Value in register X added to address
-  ///
-  /// Resolves to [`ResolvableAddress::Absolute`]
-  XIndexedAbsolute(memory::Address),
-  /// Same as [`ResolvableAddress::IndexedAbsoluteX`], but using register Y
-  ///
-  /// Resolves to [`ResolvableAddress::Absolute`]
-  YIndexedAbsolute(memory::Address),
-  /// Adds (signed) operand literal to value of program counter
-  ///
-  /// Resolves to [`Resolvable::Resolved`] **dual byte** value - attempting to resolve to single-byte value will panic!
-  Relative(cpu::Int),
-  /// Indirect address - only used for JMP
-  ///
-  /// Resolves to [`ResolvableAddress::Absolute`]
-  Indirect(memory::Address),
-  /// Value in register X added to address - wraps at end of ZeroPage (u8) range
-  ///
-  /// Resolves to [`ResolvableAddress::Indirect`]
-  XIndexedIndirect(cpu::Int),
-  /// ZeroPage (single byte) address of u16 resolvable address to use as y- Indexedaddress
-  ///
-  /// Resolves to [`ResolvableAddress::YIndexedAbsolute`]
-  IndirectYIndexed(cpu::Int),
-}
-
-trait SteppableWithCPU {
-  type Output;
-  fn step(resolvable: ResolvableAddress, cpu: &cpu::Cpu) -> Resolvable<Self::Output>;
-  fn resolve(resolvable: ResolvableAddress, cpu: &cpu::Cpu) -> Self::Output {
-    let mut resolvable = resolvable;
-    loop {
-      match Self::step(resolvable, cpu) {
-        Resolvable::Resolved(resolved) => break resolved,
-        Resolvable::Resolvable(unresolved) => resolvable = unresolved,
-      }
-    }
+pub struct Immediate(pub cpu::Int);
+impl ValueInner for Immediate {
+  fn get(&self, _: &cpu::Cpu) -> cpu::Int {
+    self.0
   }
 }
 
+/// Single-byte addressing (allows addresses 0x0000 to 0x00FF)
 #[derive(Debug)]
-pub enum Resolvable<V> {
-  /// Literal value
-  Resolved(V),
-  Resolvable(ResolvableAddress),
-}
-
-impl SteppableWithCPU for Resolvable<cpu::Int> {
-  type Output = cpu::Int;
-
-  fn step(resolvable: ResolvableAddress, cpu: &cpu::Cpu) -> Resolvable<Self::Output> {
-    ResolvableAddress::step(resolvable, cpu)
+pub struct ZeroPage(pub cpu::Int);
+impl LocationInner for ZeroPage {
+  fn address(&self, _: &cpu::Cpu) -> memory::Address {
+    memory::Address::from(self.0)
   }
 }
 
-impl SteppableWithCPU for Resolvable<memory::Address> {
-  type Output = memory::Address;
-
-  fn step(resolvable: ResolvableAddress, cpu: &cpu::Cpu) -> Resolvable<Self::Output> {
-    ResolvableAddress::step_u16(resolvable, cpu)
+/// Dual-byte addressing
+#[derive(Debug)]
+pub struct Absolute(pub memory::Address);
+impl LocationInner for Absolute {
+  fn address(&self, _: &cpu::Cpu) -> memory::Address {
+    self.0
   }
 }
 
-impl ResolvableAddress {
-  fn step_unresolved(self, cpu: &cpu::Cpu) -> ResolvableAddress {
-    use ResolvableAddress::*;
-    match self {
-      XIndexedZeroPage(address) => {
-        let address = address + cpu.register.index_x;
-        ZeroPage(address)
-      }
-      YIndexedZeroPage(address) => {
-        let address = address + cpu.register.index_y;
-        ZeroPage(address)
-      }
-      XIndexedAbsolute(address) => {
-        let address = address + memory::Address::from(cpu.register.index_x);
-        Absolute(address)
-      }
-      YIndexedAbsolute(address) => {
-        let address = address + memory::Address::from(cpu.register.index_y);
-        Absolute(address)
-      }
-      Indirect(address) => {
-        let absolute_address = cpu.memory.read_u16(address);
-        Absolute(absolute_address)
-      }
-      XIndexedIndirect(address) => {
-        let address = memory::Address::from(address + cpu.register.index_x);
-        Indirect(address)
-      }
-      IndirectYIndexed(address) => {
-        let address = cpu.memory.read_u16(memory::Address::from(address));
-        YIndexedAbsolute(address)
-      }
-      _ => unreachable!(
-        "Addressing mode {:#?} is not implemented as unresolved",
-        self
-      ),
-    }
+/// Value in register X added to offset - wraps at end of [`ZeroPage`] range
+#[derive(Debug)]
+pub struct XIndexedZeroPage(pub cpu::Int);
+impl IndirectionInner for XIndexedZeroPage {
+  type To = ZeroPage;
+  fn unwrap(&self, cpu: &cpu::Cpu) -> Self::To {
+    ZeroPage(self.0 + cpu.register.index_x)
   }
 }
 
-impl ResolvableAddress {
-  #[must_use]
-  pub fn step(resolvable: ResolvableAddress, cpu: &cpu::Cpu) -> Resolvable<cpu::Int> {
-    use ResolvableAddress::*;
-
-    use self::Resolvable::*;
-
-    match resolvable {
-      ZeroPage(address) => Resolved(cpu.memory[memory::Address::from(address)]),
-      Absolute(address) => Resolved(cpu.memory[address]),
-      _ => Resolvable(Self::step_unresolved(resolvable, cpu)),
-    }
+/// Value in register X added to offset - wraps at end of [`ZeroPage`] range
+///
+/// Only used for [`Operation::Ldx`] & [`Operation::Stx`]
+#[derive(Debug)]
+pub struct YIndexedZeroPage(pub cpu::Int);
+impl IndirectionInner for YIndexedZeroPage {
+  type To = ZeroPage;
+  fn unwrap(&self, cpu: &cpu::Cpu) -> Self::To {
+    ZeroPage(self.0 + cpu.register.index_y)
   }
-
-  #[must_use]
-  pub fn step_u16(resolvable: ResolvableAddress, cpu: &cpu::Cpu) -> Resolvable<memory::Address> {
-    use ResolvableAddress::*;
-
-    use self::Resolvable::*;
-    match resolvable {
-      ZeroPage(address) => Resolved(cpu.memory.read_u16(memory::Address::from(address))),
-      Absolute(address) => Resolved(cpu.memory.read_u16(address)),
-      _ => Resolvable(Self::step_unresolved(resolvable, cpu)),
-    }
+}
+/// Value in register X added to address
+#[derive(Debug)]
+pub struct XIndexedAbsolute(pub memory::Address);
+impl IndirectionInner for XIndexedAbsolute {
+  type To = Absolute;
+  fn unwrap(&self, cpu: &cpu::Cpu) -> Absolute {
+    Absolute(self.0 + memory::Address::from(cpu.register.index_x))
   }
 }
 
-impl Resolvable<cpu::Int> {
-  pub fn immediate(cpu: &mut cpu::Cpu) -> Self {
-    Self::Resolved(cpu.next_int())
+/// Value in register Y added to address
+#[derive(Debug)]
+pub struct YIndexedAbsolute(pub memory::Address);
+impl IndirectionInner for YIndexedAbsolute {
+  type To = Absolute;
+  fn unwrap(&self, cpu: &cpu::Cpu) -> Absolute {
+    Absolute(self.0 + memory::Address::from(cpu.register.index_y))
   }
 }
 
-impl Resolvable<u8> {
-  pub fn accumulator(cpu: &mut cpu::Cpu) -> Self {
-    Self::Resolved(cpu.register.accumulator)
+/// Adds (signed) operand literal to value of program counter
+#[derive(Debug)]
+pub struct Relative(pub cpu::Int);
+impl IndirectionInner for Relative {
+  type To = Absolute;
+  fn unwrap(&self, cpu: &cpu::Cpu) -> Absolute {
+    Absolute(memory::Address::from(self.0) + cpu.register.program_counter)
   }
 }
 
-impl<T> Resolvable<T> {
-  pub fn zero_page(cpu: &mut cpu::Cpu) -> Self {
-    Self::Resolvable(ResolvableAddress::ZeroPage(cpu.next_int()))
+/// Indirect address - only used for JMP
+#[derive(Debug)]
+pub struct Indirect(pub memory::Address);
+impl IndirectionInner for Indirect {
+  type To = Absolute;
+  fn unwrap(&self, cpu: &cpu::Cpu) -> Absolute {
+    Absolute(cpu.memory.read_u16(self.0))
   }
+}
 
-  pub fn x_indexed_zero_page(cpu: &mut cpu::Cpu) -> Self {
-    Self::Resolvable(ResolvableAddress::XIndexedZeroPage(cpu.next_int()))
+/// Value in register X added to address - wraps at end of [`ZeroPage`] (u8) range
+#[derive(Debug)]
+pub struct XIndexedIndirect(pub cpu::Int);
+impl IndirectionInner for XIndexedIndirect {
+  type To = Indirect;
+  fn unwrap(&self, cpu: &cpu::Cpu) -> Indirect {
+    Indirect(memory::Address::from(self.0 + cpu.register.index_x))
   }
+}
 
-  pub fn y_indexed_zero_page(cpu: &mut cpu::Cpu) -> Self {
-    Self::Resolvable(ResolvableAddress::YIndexedZeroPage(cpu.next_int()))
-  }
-
-  pub fn absolute(cpu: &mut cpu::Cpu) -> Self {
-    Self::Resolvable(ResolvableAddress::Absolute(cpu.next_address()))
-  }
-
-  pub fn x_indexed_absolute(cpu: &mut cpu::Cpu) -> Self {
-    Self::Resolvable(ResolvableAddress::XIndexedAbsolute(cpu.next_address()))
-  }
-
-  pub fn y_indexed_absolute(cpu: &mut cpu::Cpu) -> Self {
-    Self::Resolvable(ResolvableAddress::YIndexedAbsolute(cpu.next_address()))
-  }
-
-  pub fn relative(cpu: &mut cpu::Cpu) -> Self {
-    Self::Resolvable(ResolvableAddress::Relative(cpu.next_int()))
-  }
-
-  pub fn indirect(cpu: &mut cpu::Cpu) -> Self {
-    Self::Resolvable(ResolvableAddress::Indirect(cpu.next_address()))
-  }
-
-  pub fn x_indexed_indirect(cpu: &mut cpu::Cpu) -> Self {
-    Self::Resolvable(ResolvableAddress::XIndexedIndirect(cpu.next_int()))
-  }
-
-  pub fn indirect_y_indexed(cpu: &mut cpu::Cpu) -> Self {
-    Self::Resolvable(ResolvableAddress::IndirectYIndexed(cpu.next_int()))
+/// [`ZeroPage`] (single byte) location of address to use as y-indexed absolute address
+#[derive(Debug)]
+pub struct IndirectYIndexed(pub cpu::Int);
+impl IndirectionInner for IndirectYIndexed {
+  type To = YIndexedAbsolute;
+  fn unwrap(&self, cpu: &cpu::Cpu) -> YIndexedAbsolute {
+    let address = cpu.memory.read_u16(memory::Address::from(self.0));
+    YIndexedAbsolute(address + memory::Address::from(cpu.register.index_y))
   }
 }

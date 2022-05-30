@@ -15,7 +15,6 @@ pub struct Nes {
 ///
 /// WARNING: some flags (especially N & Z) may be affected by commands in ways that do not follow their defined purpose.
 ///
-#[must_use]
 pub struct StatusRegister {
   pub result_status: ResultStatus,
   pub interrupt_status: InterruptStatus,
@@ -87,5 +86,15 @@ pub enum Overflow {
 impl Default for Overflow {
   fn default() -> Self {
     Self::NoOverflow
+  }
+}
+
+impl From<bool> for Overflow {
+  fn from(v: bool) -> Self {
+    if v {
+      Overflow::UnsignedOverflow
+    } else {
+      Overflow::NoOverflow
+    }
   }
 }

@@ -29,7 +29,7 @@ fn main() -> Result<(), Box<dyn Error>> {
   log_builder.filter_level(LevelFilter::Warn);
 
   if let Some(filter) = args.log {
-    log_builder.filter(None, filter);
+    log_builder.filter_level(filter);
   }
 
   log_builder.init();
