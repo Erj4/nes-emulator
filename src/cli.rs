@@ -1,28 +1,24 @@
 use std::{convert::TryFrom, path::PathBuf};
 
-use structopt::StructOpt;
+use clap::Parser;
 use thiserror::Error;
 
 use crate::memory;
 
-#[derive(Debug, StructOpt)]
-#[structopt(
-  name = env!("CARGO_BIN_NAME"),
-  version = env!("CARGO_PKG_VERSION"),
-  author = env!("CARGO_PKG_AUTHORS")
-)]
+#[derive(Debug, Parser)]
+#[clap(author, version, about)]
 pub struct Cli {
-  #[structopt(long, env = "NES_LOG_LEVEL")]
+  #[clap(long, env = "NES_LOG_LEVEL")]
   pub log: Option<log::LevelFilter>,
   /// Initial address to set program counter to
   ///
   /// This may be any evalexpr expression which evaluates to a valid memory address integer.
   ///
   /// The following variables are exposed to be used in the expression: rom, rom_size, ram, ram_size
-  #[structopt(short, long, parse(try_from_str = eval_address_expression))]
+  #[clap(short, long, parse(try_from_str = eval_address_expression))]
   pub start_address: Option<memory::Address>,
   /// Program file to load to ROM
-  #[structopt(name = "FILE", parse(from_os_str))]
+  #[clap(name = "FILE", parse(from_os_str))]
   pub file: Option<PathBuf>,
 }
 

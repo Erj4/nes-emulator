@@ -12,18 +12,18 @@
 #![warn(clippy::unwrap_in_result)]
 // #![warn(clippy::unwrap_used)]
 
-use std::{error::Error, fs::File};
+use std::fs::File;
 
+use clap::Parser;
 use env_logger::Builder;
 use log::{info, warn, LevelFilter};
-use structopt::StructOpt;
 
 mod cli;
 pub mod cpu;
 pub mod memory;
 
-fn main() -> Result<(), Box<dyn Error>> {
-  let args = cli::Cli::from_args();
+fn main() -> anyhow::Result<()> {
+  let args = cli::Cli::parse();
 
   let log_builder = &mut Builder::new();
   log_builder.filter_level(LevelFilter::Warn);
@@ -36,18 +36,19 @@ fn main() -> Result<(), Box<dyn Error>> {
 
   let mut cpu: cpu::Cpu = cpu::Cpu::default();
 
-  if let Some(path) = args.file {
-    let mut file = File::open(path)?;
+  if let Some(path) = &args.file {
+    let mut file = File::open(&path)?;
     cpu.load_from(&mut file)?;
   };
+
   match args.start_address {
-    None => cpu.start(),
+    None => cpu.start()?,
     Some(address) => {
       info!("starting from address {:#X}", address);
-      cpu.start_from(address);
+      cpu.start_from(address)?;
     }
   };
-  info!("exiting successfully");
 
+  info!("exiting successfully");
   Ok(())
 }
