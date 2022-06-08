@@ -1,6 +1,7 @@
 #![allow(clippy::identity_op)] // Ignored due to clippy bug
 
 pub mod addressing_mode;
+pub mod error;
 pub mod exec;
 pub mod operation;
 pub mod registers;
@@ -27,7 +28,7 @@ impl Nes {
   ///
   /// # Errors
   /// Forwards any errors encountered while reading the file
-  pub fn load_from(&mut self, from: &mut dyn Read) -> std::io::Result<usize> {
+  pub fn load_from(&mut self, from: &mut dyn Read) -> anyhow::Result<usize> {
     let result = from.read(&mut self.memory.program_rom)?;
     self
       .memory
@@ -50,26 +51,35 @@ impl Nes {
       .read_u16(memory::constant::PROGRAM_COUNTER_RESET);
   }
 
-  pub fn start(&mut self) {
+  /// # Errors
+  /// See [`Cpu::resume`]
+  pub fn start(&mut self) -> anyhow::Result<()> {
     self.reset();
-    self.resume();
+    self.resume()
   }
 
-  pub fn start_from(&mut self, instructions: memory::Address) {
+  /// # Errors
+  /// See [`Cpu::resume`]
+  pub fn start_from(&mut self, instructions: memory::Address) -> anyhow::Result<()> {
     self.reset();
     self.register.program_counter = instructions;
-    self.resume();
+    self.resume()
   }
 
-  pub fn resume(&mut self) {
+  /// # Errors
+  /// Returns any [`error::Error`] that occurs during execution
+  pub fn resume(&mut self) -> anyhow::Result<()> {
     loop {
       let operation = self.next_operation();
-      self.execute(&operation);
+      self.execute(operation)?;
+      self.execute(operation)?;
       if self.stop {
         break;
       }
     }
     info!("execution has stopped");
+
+    Ok(())
   }
 
   fn next_int(&mut self) -> Int {

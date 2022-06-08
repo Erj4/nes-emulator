@@ -1,57 +1,58 @@
 pub mod parse;
 
 use super::addressing_mode::{Location, Value};
+use strum::Display;
 
-#[derive(Debug)]
+#[derive(Clone, Copy, Debug, Display)]
 pub enum Operation {
   /// Add with carry
-  Adc(Box<dyn Value>),
+  Adc(Value),
   /// Bitwise AND with accumulator
-  And(Box<dyn Value>),
+  And(Value),
   /// Arithmetic shift accumulator left
   ASLAcc,
   /// Arithmetic shift left
-  Asl(Box<dyn Location>),
+  Asl(Location),
   /// Set flags based on bits
-  Bit(Box<dyn Value>),
+  Bit(Value),
   /// Branch if plus
   ///
   /// Branch if negative flag clear
-  Bpl(Box<dyn Value>),
+  Bpl(Value),
   /// Branch if minus
   ///
   /// Branch if negative flag set
-  Bmi(Box<dyn Value>),
+  Bmi(Value),
   /// Branch if overflow flag clear
-  Bvc(Box<dyn Value>),
+  Bvc(Value),
   /// Branch if overflow flag set
-  Bvs(Box<dyn Value>),
+  Bvs(Value),
   /// Branch if carry flag clear
-  Bcc(Box<dyn Value>),
+  Bcc(Value),
   /// Branch if carry flag set
-  Bcs(Box<dyn Value>),
+  Bcs(Value),
   /// Branch if not equal
   ///
   /// Branches if zero flag clear
-  Bne(Box<dyn Value>),
+  Bne(Value),
   /// Branch if equal
   ///
   /// Branch if zero flag set
-  Beq(Box<dyn Value>),
+  Beq(Value),
   /// Break
   ///
   /// Triggers non-maskable interrupt (NMI).
   Brk,
   /// Compare to accumulator
-  Cmp(Box<dyn Value>),
+  Cmp(Value),
   /// Compare to X register
-  Cpx(Box<dyn Value>),
+  Cpx(Value),
   /// Compare to Y register
-  Cpy(Box<dyn Value>),
+  Cpy(Value),
   /// Decrement memory
-  Dec(Box<dyn Location>),
+  Dec(Location),
   /// Bitwise exclusive OR (XOR)
-  Eor(Box<dyn Value>),
+  Eor(Value),
   /// Set carry processor flag
   Sec,
   /// Clear carry processor flag
@@ -67,23 +68,23 @@ pub enum Operation {
   /// Clear decimal mode processor flag (not implemented on NES)
   Cld,
   /// Increment memory
-  Inc(Box<dyn Location>),
+  Inc(Location),
   /// Jump
-  Jmp(Box<dyn Location>),
+  Jmp(Location),
   /// Jump to SubRoutine
-  Jsr(Box<dyn Location>),
+  Jsr(Location),
   /// Load to accumulator
-  Lda(Box<dyn Value>),
+  Lda(Value),
   /// Load to X register
-  Ldx(Box<dyn Value>),
+  Ldx(Value),
   /// Load to Y register
-  Ldy(Box<dyn Value>),
+  Ldy(Value),
   /// Logical shift right
-  Lsr(Box<dyn Value>),
+  Lsr(Value),
   /// No-op
   Nop,
   /// Bitwise OR with accumulator
-  Ora(Box<dyn Value>),
+  Ora(Value),
   /// Transfer A to X
   Tax,
   /// Transfer X to A
@@ -103,21 +104,21 @@ pub enum Operation {
   /// Rotate accumulator left
   RolAcc,
   /// Rotate left
-  Rol(Box<dyn Location>),
+  Rol(Location),
   /// Rotate accumulator left
   RorAcc,
   /// Rotate accumulator right
-  Ror(Box<dyn Location>),
+  Ror(Location),
   /// Return from interrupt
   Rti,
   /// Return from subroutine
   Rts,
   /// Subtract with carry
-  Sbc(Box<dyn Value>),
+  Sbc(Value),
   // Store accumulator
-  Sta(Box<dyn Location>),
+  Sta(Location),
   // Store accumulator
-  Stx(Box<dyn Location>),
+  Stx(Location),
   // Store accumulator
-  Sty(Box<dyn Location>),
+  Sty(Location),
 }
