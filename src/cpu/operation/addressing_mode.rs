@@ -1,12 +1,5 @@
 use crate::{cpu, memory};
 
-// pub trait Value: ValueInner + std::fmt::Debug + Clone + Copy + Send + Sync {}
-// impl<T: ValueInner + std::fmt::Debug + Clone + Copy + Send + Sync> Value for T {}
-// pub trait Location: LocationInner + std::fmt::Debug + Clone + Copy + Send + Sync {}
-// impl<T: LocationInner + std::fmt::Debug + Clone + Copy + Send + Sync> Location for T {}
-// pub trait Indirection: IndirectionInner + std::fmt::Debug + Clone + Copy + Send + Sync {}
-// impl<T: IndirectionInner + std::fmt::Debug + Clone + Copy + Send + Sync> Indirection for T {}
-
 #[derive(Clone, Copy, Debug)]
 pub enum Value {
   /// Literal values
@@ -21,6 +14,12 @@ impl Value {
       Immediate(value) => value,
       Location(at) => cpu.memory.read(at.location(cpu)),
     }
+  }
+}
+
+impl From<cpu::Int> for Value {
+  fn from(value: cpu::Int) -> Self {
+      Value::Immediate(value)
   }
 }
 

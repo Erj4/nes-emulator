@@ -1,27 +1,27 @@
 [package]
-name = "emulators"
+name = "nes-emulator"
 version = "0.1.0"
 authors = ["Edward Jones <mail@erj4.uk>"]
 edition = "2021"
 
-[lib]
-name = "emulators"
-path = "src/lib.rs"
-
 [[bin]]
-name = "nes_emulator"
+name = "nes-emulator"
 path = "src/main.rs"
 
 [dependencies]
 anyhow = "1.0"
-chrono = "0.4.19"
+chrono = "0.4"
 clap = { version = "3.1", features = ["derive", "env"] }
-env_logger = "0.9.0"
-evalexpr = "6.6.0"
-log = "0.4.14"
-structopt = "0.3.25"
+env_logger = "0.9"
+evalexpr = "7.2"
+log = "0.4"
+structopt = "0.3"
 strum = { version = "0.24", features = ["derive"] }
-thiserror = "1.0.30"
+thiserror = "1.0"
+tracing = { version = "0.1", features = ["log"] }
+
+[dev-dependencies]
+test-case = "2.1"
 
 [dev-dependencies.cargo-husky]
 version = "1"

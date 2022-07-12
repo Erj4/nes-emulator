@@ -34,6 +34,7 @@ pub struct InterruptStatus {
   pub break_command: bool,
 }
 
+#[allow(clippy::struct_excessive_bools)]
 #[derive(Debug, Default)]
 pub struct ResultStatus {
   /// Whether result of last operation was zero
@@ -46,7 +47,7 @@ pub struct ResultStatus {
   ///
   /// This condition is set during arithmetic, comparison and during logical shifts.
   /// It can be explicitly set using the 'Set Carry Flag' (SEC) instruction and cleared with 'Clear Carry Flag' (CLC).
-  pub carry: Carry,
+  pub carry: bool,
   /// Whether last operation caused a *signed* integer overflow
   ///
   ///
@@ -54,17 +55,7 @@ pub struct ResultStatus {
   ///
   /// Cleared with 'Clear Overflow' (CLV) instruction.
   /// Only affected by ADC, BIT, CLV, PLP, RTI, and SBC instructions.
-  pub overflow: Overflow,
-}
-#[derive(Debug)]
-pub enum Carry {
-  NoOverflow,
-  UnsignedOverflow,
-}
-impl Default for Carry {
-  fn default() -> Self {
-    Self::NoOverflow
-  }
+  pub overflow: bool,
 }
 
 #[derive(Debug)]
@@ -75,26 +66,5 @@ pub enum NumberMode {
 impl Default for NumberMode {
   fn default() -> Self {
     Self::Binary
-  }
-}
-
-#[derive(Debug)]
-pub enum Overflow {
-  NoOverflow,
-  UnsignedOverflow,
-}
-impl Default for Overflow {
-  fn default() -> Self {
-    Self::NoOverflow
-  }
-}
-
-impl From<bool> for Overflow {
-  fn from(v: bool) -> Self {
-    if v {
-      Overflow::UnsignedOverflow
-    } else {
-      Overflow::NoOverflow
-    }
   }
 }

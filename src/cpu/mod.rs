@@ -1,6 +1,5 @@
 #![allow(clippy::identity_op)] // Ignored due to clippy bug
 
-pub mod addressing_mode;
 pub mod error;
 pub mod exec;
 pub mod operation;
@@ -8,7 +7,7 @@ pub mod registers;
 
 use std::io::Read;
 
-use log::info;
+use tracing::info;
 
 use crate::memory;
 use operation::Operation;
@@ -69,15 +68,16 @@ impl Nes {
   /// # Errors
   /// Returns any [`error::Error`] that occurs during execution
   pub fn resume(&mut self) -> anyhow::Result<()> {
+    info!("starting from address {:#X}", self.register.program_counter);
     loop {
-      let operation = self.next_operation();
+      let operation = Operation::next(self);
       self.execute(operation)?;
       self.execute(operation)?;
       if self.stop {
         break;
       }
     }
-    info!("execution has stopped");
+    info!("execution stopped");
 
     Ok(())
   }

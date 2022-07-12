@@ -1,7 +1,9 @@
+pub mod addressing_mode;
 pub mod parse;
 
-use super::addressing_mode::{Location, Value};
 use strum::Display;
+
+use self::addressing_mode::{Value, Location};
 
 #[derive(Clone, Copy, Debug, Display)]
 pub enum Operation {

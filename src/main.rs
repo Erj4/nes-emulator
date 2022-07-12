@@ -16,7 +16,7 @@ use std::fs::File;
 
 use clap::Parser;
 use env_logger::Builder;
-use log::{info, warn, LevelFilter};
+use log::LevelFilter;
 
 mod cli;
 pub mod cpu;
@@ -43,12 +43,8 @@ fn main() -> anyhow::Result<()> {
 
   match args.start_address {
     None => cpu.start()?,
-    Some(address) => {
-      info!("starting from address {:#X}", address);
-      cpu.start_from(address)?;
-    }
+    Some(address) => cpu.start_from(address)?,
   };
 
-  info!("exiting successfully");
   Ok(())
 }

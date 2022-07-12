@@ -129,22 +129,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "emulators"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "cargo-husky",
- "chrono",
- "clap 3.1.18",
- "env_logger",
- "evalexpr",
- "log",
- "structopt",
- "strum",
- "thiserror",
-]
-
-[[package]]
 name = "env_logger"
 version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -159,9 +143,9 @@ dependencies = [
 
 [[package]]
 name = "evalexpr"
-version = "6.6.0"
+version = "7.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cfc25fd417983cc7f203394ebb89eba18e2df1b0ac1be2673091b5aca52b595f"
+checksum = "1d4fd7bd9e32c1205549decf6f36772d7b606a579b26afaffa335ae148151a5d"
 
 [[package]]
 name = "hashbrown"
@@ -237,6 +221,24 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "308cc39be01b73d0d18f82a0e7b2a3df85245f84af96fdddc5d202d27e47b86a"
 
 [[package]]
+name = "nes-emulator"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "cargo-husky",
+ "chrono",
+ "clap 3.1.18",
+ "env_logger",
+ "evalexpr",
+ "log",
+ "structopt",
+ "strum",
+ "test-case",
+ "thiserror",
+ "tracing",
+]
+
+[[package]]
 name = "num-integer"
 version = "0.1.44"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -256,10 +258,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "once_cell"
+version = "1.12.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7709cef83f0c1f58f666e746a08b21e0085f7440fa6a29cc194d68aac97a4225"
+
+[[package]]
 name = "os_str_bytes"
 version = "6.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "21326818e99cfe6ce1e524c2a805c189a99b5ae555a35d19f9a284b427d86afa"
+
+[[package]]
+name = "pin-project-lite"
+version = "0.2.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e0a7ae3ac2f1173085d398531c705756c94a4c56843785df85a60c1a0afac116"
 
 [[package]]
 name = "proc-macro-error"
@@ -405,6 +419,28 @@ dependencies = [
 ]
 
 [[package]]
+name = "test-case"
+version = "2.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "196e8a70562e252cc51eaaaee3ecddc39803d9b7fd4a772b7c7dae7cdf42a859"
+dependencies = [
+ "test-case-macros",
+]
+
+[[package]]
+name = "test-case-macros"
+version = "2.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8dd461f47ade621665c9f4e44b20449341769911c253275dc5cb03726cbb852c"
+dependencies = [
+ "cfg-if",
+ "proc-macro-error",
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "textwrap"
 version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -448,6 +484,39 @@ dependencies = [
  "libc",
  "wasi",
  "winapi",
+]
+
+[[package]]
+name = "tracing"
+version = "0.1.35"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a400e31aa60b9d44a52a8ee0343b5b18566b03a8321e0d321f695cf56e940160"
+dependencies = [
+ "cfg-if",
+ "log",
+ "pin-project-lite",
+ "tracing-attributes",
+ "tracing-core",
+]
+
+[[package]]
+name = "tracing-attributes"
+version = "0.1.21"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cc6b8ad3567499f98a1db7a752b07a7c8c7c7c34c332ec00effb2b0027974b7c"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
+name = "tracing-core"
+version = "0.1.27"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7709595b8878a4965ce5e87ebf880a7d39c9afc6837721b21a5a816a8117d921"
+dependencies = [
+ "once_cell",
 ]
 
 [[package]]
